@@ -9,7 +9,7 @@ defaults:
   - override hydra/launcher: submitit_slurm
 
 # base path to save model outputs. Checkpoints will be saved to ${ckpt_base_path}/outputs.
-ckpt_base_path: ./ # put absolute path here
+ckpt_base_path: /brtx/604-nvme1/jyu48/dino_wm_data/check_point # put absolute path here
 
 hydra:
   run:

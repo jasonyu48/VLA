@@ -1,0 +1,6 @@
+Epoch 1  Training loss: 0.4575                  Validation loss: 0.0172
+Epoch 5  Training loss: 0.0095                  Validation loss: 0.0066
+Epoch 10  Training loss: 0.0063                  Validation loss: 0.0048
+Epoch 15  Training loss: 0.0052                  Validation loss: 0.0040
+Epoch 20  Training loss: 0.0045                  Validation loss: 0.0037
+Epoch 23  Training loss: 0.0043                  Validation loss: 0.0034
