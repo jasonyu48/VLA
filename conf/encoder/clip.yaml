@@ -1,0 +1,3 @@
+_target_: models.clip.CLIPEncoder
+name: "openai/clip-vit-base-patch32"
+feature_key: "pooler_output" 
