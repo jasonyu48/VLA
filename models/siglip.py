@@ -1,27 +1,24 @@
 import torch
 import torch.nn as nn
-from transformers import CLIPProcessor, CLIPVisionModel
+from transformers import AutoProcessor, AutoModel
 
-class CLIPEncoder(nn.Module):
+class SigLIPEncoder(nn.Module):
     def __init__(self, name, feature_key="pooler_output"):
         super().__init__()
-        self.name = "clip"
-        self.processor = CLIPProcessor.from_pretrained(name)
-        self.base_model = CLIPVisionModel.from_pretrained(name)
+        self.name = "siglip"
+        self.processor = AutoProcessor.from_pretrained(name)
+        self.base_model = AutoModel.from_pretrained(name)
         self.feature_key = feature_key
         
-        # Get embedding dimension from the model's configuration
-        self.emb_dim = self.base_model.config.hidden_size
+        self.emb_dim = self.base_model.config.vision_config.hidden_size
         
         # Since we're using pooled output, this will be 1D
         self.latent_ndim = 1
         
         # Get patch size from model config
-        self.patch_size = self.base_model.config.patch_size
+        self.patch_size = self.base_model.config.vision_config.patch_size
 
     def forward(self, x):
-        # import pdb; pdb.set_trace()
-
         device = x.device
         x = (x * 255).cpu().numpy().astype("uint8")
         
@@ -31,9 +28,7 @@ class CLIPEncoder(nn.Module):
         # Process images
         inputs = self.processor(images=images, return_tensors="pt")
         pixel_values = inputs.pixel_values.to(device)
-        # print("-----------pixel_values.shape-----------")
-        # print(pixel_values.shape)
-        # [512, 3, 224, 224]
+        print(pixel_values.shape)
         
         # Get features
         with torch.no_grad():
@@ -49,7 +44,5 @@ class CLIPEncoder(nn.Module):
         # Add dummy patch dimension to match expected shape
         if self.latent_ndim == 1:
             emb = emb.unsqueeze(1)
-        # print("-----------emb.shape-----------")
-        # print(emb.shape)
-        # [512, 1, 768]
+            
         return emb 

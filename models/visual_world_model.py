@@ -59,6 +59,14 @@ class VWorldModel(nn.Module):
             self.encoder_transform = transforms.Compose(
                 [transforms.Resize(self.encoder_image_size)]
             )
+        elif "clip" in self.encoder.name.lower():
+            # CLIP ViT-B/32 expects 224x224 images
+            self.encoder_image_size = 224
+            self.encoder_transform = transforms.Compose(
+                [transforms.Resize((self.encoder_image_size, self.encoder_image_size))]
+            )
+            # For CLIP, we treat the output as a single patch
+            self.num_patches = 1
         else:
             # set self.encoder_transform to identity transform
             self.encoder_transform = lambda x: x

@@ -1,0 +1,6 @@
+_target_: models.vqvae_clip.VQVAEClip
+# emb_dim is automatically provided by train.py based on the encoder's output dimension
+n_res_block: 4
+n_res_channel: 128
+output_size: 224
+quantize: False 
