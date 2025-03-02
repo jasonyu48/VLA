@@ -20,7 +20,6 @@ class DinoV2Encoder(nn.Module):
         self.patch_size = self.base_model.patch_size
 
     def forward(self, x):
-        import pdb; pdb.set_trace()
         emb = self.base_model.forward_features(x)[self.feature_key]
         if self.latent_ndim == 1:
             emb = emb.unsqueeze(1) # dummy patch dim
