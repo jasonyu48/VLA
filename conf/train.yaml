@@ -32,7 +32,7 @@ hydra:
 training:
   seed: 0
   epochs: 15
-  batch_size: 512 # should >= nodes * tasks_per_node  
+  batch_size: 128 # should >= nodes * tasks_per_node  
   # accelerate launch train.py --config-name train.yaml env=point_maze frameskip=5 num_hist=3
   save_every_x_epoch: 1
   reconstruct_every_x_batch: 500
@@ -43,11 +43,11 @@ training:
   predictor_lr_base: 5e-4
   action_encoder_lr_base: 5e-4
   # Define multiplier
-  lr_multiplier: 4
+  lr_multiplier: 2
   # Calculate final learning rates using string interpolation
-  decoder_lr: 0.0012  # 3e-4 * 4
-  predictor_lr: 0.002  # 5e-4 * 4
-  action_encoder_lr: 0.002  # 5e-4 * 4
+  decoder_lr: 0.0006  # 3e-4 * 2
+  predictor_lr: 0.001  # 5e-4 * 2
+  action_encoder_lr: 0.001  # 5e-4 * 2
 
 img_size: 224 # should be a multiple of 224
 frameskip: 5
