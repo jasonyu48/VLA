@@ -100,7 +100,7 @@ class PlanEvaluator:  # evaluator for planning
         )
         trans_obs_g = move_to_device(
             self.preprocessor.transform_obs(self.obs_g), self.device
-        )
+        ) # -------when text goal is used, we also don't need to transform the goal--------
         with torch.no_grad():
             i_z_obses, _ = self.wm.rollout(
                 obs_0=trans_obs_0,
