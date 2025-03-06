@@ -249,6 +249,9 @@ class MazeEnv(mujoco_env.MujocoEnv, utils.EzPickle, offline_env.OfflineEnv):
         return ob, reward, done, info
 
     def _get_obs(self):
+        '''
+        obs is defined here
+        '''
         obs = {
             "visual": np.concatenate([self.sim.data.qpos, self.sim.data.qvel]).ravel().astype(np.float32),
             "proprio": np.concatenate([self.sim.data.qpos, self.sim.data.qvel]).ravel().astype(np.float32),

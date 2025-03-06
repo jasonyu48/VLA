@@ -25,6 +25,9 @@ class PointMazeWrapper(MazeEnv):
         rs = np.random.RandomState(seed)
 
         def generate_state():
+            '''
+            A state is a NumPy array with 4 elements [x, y, vx, vy]
+            '''
             valid = False
             while not valid:
                 x = rs.uniform(0.5, 3.1)
@@ -41,7 +44,7 @@ class PointMazeWrapper(MazeEnv):
 
         init_state = generate_state()
         goal_state = generate_state()
-        return init_state, goal_state
+        return init_state, goal_state # these are batch of states
     
     def update_env(self, env_info):
         pass 

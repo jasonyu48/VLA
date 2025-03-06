@@ -212,7 +212,7 @@ class PlanWorkspace:
             # sample random states
             rand_init_state, rand_goal_state = self.env.sample_random_init_goal_states(
                 self.eval_seed
-            )
+            ) #For the PointMazeWrapper, a state is a NumPy array with 4 elements [x, y, vx, vy]
             if self.env_name == "deformable_env": # take rand init state from dset for deformable envs
                 rand_init_state = np.array([x[0] for x in states])
 
