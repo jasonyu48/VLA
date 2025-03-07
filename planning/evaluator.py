@@ -100,6 +100,7 @@ class PlanEvaluator:  # evaluator for planning
         trans_obs_0 = move_to_device(
             self.preprocessor.transform_obs(self.obs_0), self.device
         )
+
         if not self.text_goal:
             trans_obs_g = move_to_device(
                 self.preprocessor.transform_obs(self.obs_g), self.device
@@ -223,16 +224,30 @@ class PlanEvaluator:  # evaluator for planning
         """
         e_visuals = e_visuals[: self.n_plot_samples]
         i_visuals = i_visuals[: self.n_plot_samples]
-        #print the shape of e_visuals and i_visuals
-        print(e_visuals.shape) #[5, 26, 3, 224, 224]
-        print(i_visuals.shape) #[5, 6, 3, 224, 224]
-        print(self.obs_g) #a list of 5 strings
-        if isinstance(self.obs_g[0], str):
-            #TODO: handle text-based goals. if 'lower left' in str, create a 224x224 image where its bottom left is 1 and the rest is 0, and so on, do it for all the str in self.obs_g
+
+        # print(e_visuals.shape) #[5, 26, 3, 224, 224]
+        # print(i_visuals.shape) #[5, 6, 3, 224, 224]
+        # print(self.obs_g) # {'text': [a list of 5 strings]}
+
+        if 'text' in self.obs_g:
+            # Handle text-based goals by creating 224x224 goal images
+            goal_visual = []
+            for goal in self.obs_g['text'][: self.n_plot_samples]:
+                img = np.zeros((224, 224))
+                if 'lower left' in goal:
+                    img[:112, :112] = 1
+                elif 'upper left' in goal:
+                    img[112:, :112] = 1
+                elif 'upper right' in goal:
+                    img[112:, 112:] = 1
+                elif 'lower right' in goal:
+                    img[:112, 112:] = 1
+                goal_visual.append(torch.tensor(img).unsqueeze(0).repeat(3, 1, 1))  # Convert to 3-channel tensor
+            goal_visual = torch.stack(goal_visual)  # Stack into batch format
+            goal_visual = goal_visual.unsqueeze(1)  # Add a new dimension for the goal
         else:
             goal_visual = self.obs_g["visual"][: self.n_plot_samples]
-
-        goal_visual = self.preprocessor.transform_obs_visual(goal_visual)
+            goal_visual = self.preprocessor.transform_obs_visual(goal_visual)
 
         i_visuals = i_visuals.unsqueeze(2)
         i_visuals = torch.cat(
