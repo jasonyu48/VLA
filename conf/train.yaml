@@ -31,7 +31,7 @@ hydra:
 
 training:
   seed: 0
-  epochs: 15
+  epochs: 32
   batch_size: 128 # should >= nodes * tasks_per_node  
   # accelerate launch train.py --config-name train.yaml env=point_maze frameskip=5 num_hist=3
   save_every_x_epoch: 1
@@ -83,7 +83,7 @@ debug: False
 plan_settings: 
   # plan_cfg_path: conf/plan.yaml # set to null for no planning evals
   plan_cfg_path: null 
-  planner: ['gd', 'cem']
-  goal_source: ['dset', 'random_state']
+  planner: ['gd']
+  goal_source: ['dset']
   goal_H: [5]
   alpha: [0.1, 1]

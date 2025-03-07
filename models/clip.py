@@ -1,27 +1,30 @@
 import torch
 import torch.nn as nn
-from transformers import CLIPProcessor, CLIPVisionModel
+from transformers import CLIPProcessor, CLIPModel
 
 class CLIPEncoder(nn.Module):
     def __init__(self, name, feature_key="pooler_output"):
         super().__init__()
         self.name = "clip"
+        # Use the unified CLIP model
         self.processor = CLIPProcessor.from_pretrained(name)
-        self.base_model = CLIPVisionModel.from_pretrained(name)
+        self.model = CLIPModel.from_pretrained(name)
         self.feature_key = feature_key
         
         # Get embedding dimension from the model's configuration
-        self.emb_dim = self.base_model.config.hidden_size
+        self.emb_dim = self.model.config.projection_dim  # This is the common projection space dimension
         
         # Since we're using pooled output, this will be 1D
         self.latent_ndim = 1
         
-        # Get patch size from model config
-        self.patch_size = self.base_model.config.patch_size
+        # Get patch size from model config if available
+        if hasattr(self.model.config, 'vision_config'):
+            self.patch_size = self.model.config.vision_config.patch_size
+        else:
+            self.patch_size = 16  # Default patch size
 
     def forward(self, x):
-        # import pdb; pdb.set_trace()
-
+        """Process images through the CLIP vision encoder"""
         device = x.device
         x = (x * 255).cpu().numpy().astype("uint8")
         
@@ -30,26 +33,40 @@ class CLIPEncoder(nn.Module):
         
         # Process images
         inputs = self.processor(images=images, return_tensors="pt")
-        pixel_values = inputs.pixel_values.to(device)
-        # print("-----------pixel_values.shape-----------")
-        # print(pixel_values.shape)
-        # [512, 3, 224, 224]
+        inputs = {k: v.to(device) for k, v in inputs.items()}
         
-        # Get features
+        # Get features using the unified model
         with torch.no_grad():
-            outputs = self.base_model(pixel_values)
-            
-        if self.feature_key == "pooler_output":
-            emb = outputs.pooler_output
-        elif self.feature_key == "last_hidden_state":
-            emb = outputs.last_hidden_state
-        else:
-            raise ValueError(f"Invalid feature key: {self.feature_key}")
+            outputs = self.model.get_image_features(**inputs)
             
         # Add dummy patch dimension to match expected shape
         if self.latent_ndim == 1:
-            emb = emb.unsqueeze(1)
-        # print("-----------emb.shape-----------")
-        # print(emb.shape)
-        # [512, 1, 768]
-        return emb 
+            outputs = outputs.unsqueeze(1)
+            
+        return outputs
+    
+    def encode_text(self, text_list):
+        """
+        Encode text inputs using the CLIP text encoder
+        
+        Args:
+            text_list: List of text strings to encode
+            
+        Returns:
+            Text embeddings with shape [batch_size, 1, embedding_dim]
+        """
+        device = next(self.model.parameters()).device
+        
+        # Process text
+        inputs = self.processor(text=text_list, return_tensors="pt", padding=True, truncation=True)
+        inputs = {k: v.to(device) for k, v in inputs.items()}
+        
+        # Get text features using the unified model
+        with torch.no_grad():
+            outputs = self.model.get_text_features(**inputs)
+            
+        # Add dummy patch dimension to match expected shape
+        if self.latent_ndim == 1:
+            outputs = outputs.unsqueeze(1)
+            
+        return outputs 

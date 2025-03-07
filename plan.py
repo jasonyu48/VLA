@@ -136,6 +136,9 @@ class PlanWorkspace:
         self.goal_H = cfg_dict["goal_H"]
         self.action_dim = self.dset.action_dim * self.frameskip
         self.debug_dset_init = cfg_dict["debug_dset_init"]
+        self.n_plot_samples = cfg_dict["n_plot_samples"]
+        # Add text_goal parameter with default value False
+        self.text_goal = cfg_dict.get("text_goal", False)
 
         objective_fn = hydra.utils.call(
             cfg_dict["objective"],
@@ -167,6 +170,7 @@ class PlanWorkspace:
             seed=self.eval_seed,
             preprocessor=self.data_preprocessor,
             n_plot_samples=self.cfg_dict["n_plot_samples"],
+            text_goal=self.text_goal,
         )
 
         if self.wandb_run is None or isinstance(
@@ -202,7 +206,7 @@ class PlanWorkspace:
         actions = []
         observations = []
         
-        if self.goal_source == "random_state":
+        if self.goal_source == "random_state" or self.goal_source == "text_goal":
             # update env config from val trajs
             observations, states, actions, env_info = (
                 self.sample_traj_segment_from_dset(traj_len=2)
@@ -217,17 +221,53 @@ class PlanWorkspace:
                 rand_init_state = np.array([x[0] for x in states])
 
             obs_0, state_0 = self.env.prepare(self.eval_seed, rand_init_state)
-            obs_g, state_g = self.env.prepare(self.eval_seed, rand_goal_state)
+            
+            # Handle text-based goals
+            if self.goal_source == "text_goal":
+                # Define the four corner descriptions
+                corner_descriptions = [
+                    "a green point is at the lower left corner of the u-shaped maze",
+                    "a green point is at the upper left corner of the u-shaped maze",
+                    "a green point is at the upper right corner of the u-shaped maze",
+                    "a green point is at the lower right corner of the u-shaped maze"
+                ]
+                
+                # Randomly assign corner goals to each evaluation instance
+                n_evals = len(self.eval_seed)
+                corner_indices = np.random.randint(0, 4, size=n_evals)
+                goal_texts = [corner_descriptions[idx] for idx in corner_indices]
+                
+                # Create text-based observation
+                obs_g = {"text": goal_texts}
+                
+                # Define corner positions for evaluation
+                corners = [
+                    [0.5, 0.5, 0.0, 0.0],    # Lower left corner
+                    [0.5, 3.1, 0.0, 0.0],    # Upper left corner
+                    [3.1, 3.1, 0.0, 0.0],    # Upper right corner
+                    [3.1, 0.5, 0.0, 0.0]     # Lower right corner
+                ]
+                
+                # Set goal states to corner indices for evaluation
+                goal_state = corner_indices
+            else:
+                # Original image-based goal
+                obs_g, state_g = self.env.prepare(self.eval_seed, rand_goal_state)
+                goal_state = rand_goal_state
 
-            # add dim for t
-            for k in obs_0.keys():
-                obs_0[k] = np.expand_dims(obs_0[k], axis=1)
-                obs_g[k] = np.expand_dims(obs_g[k], axis=1)
+            # add dim for t for visual observations
+            if self.goal_source != "text_goal":
+                for k in obs_0.keys():
+                    obs_0[k] = np.expand_dims(obs_0[k], axis=1)
+                    obs_g[k] = np.expand_dims(obs_g[k], axis=1)
+            else:
+                for k in obs_0.keys():
+                    obs_0[k] = np.expand_dims(obs_0[k], axis=1)
 
             self.obs_0 = obs_0
             self.obs_g = obs_g
             self.state_0 = rand_init_state  # (b, d)
-            self.state_g = rand_goal_state
+            self.state_g = goal_state
             self.gt_actions = None
         else:
             # update env config from val trajs

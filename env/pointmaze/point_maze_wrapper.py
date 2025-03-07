@@ -50,8 +50,38 @@ class PointMazeWrapper(MazeEnv):
         pass 
     
     def eval_state(self, goal_state, cur_state):
-        success = np.linalg.norm(goal_state[:2] - cur_state[:2]) < 0.5
-        state_dist = np.linalg.norm(goal_state - cur_state)
+        """
+        Evaluate if the current state has reached the goal state
+        
+        Args:
+            goal_state: The goal state (as coordinates [x, y, vx, vy] or an integer corner index 0-3)
+            cur_state: The current state [x, y, vx, vy]
+            
+        Returns:
+            Dictionary with success and state_dist metrics
+        """
+        if isinstance(goal_state, (int, np.integer)) or (isinstance(goal_state, (list, np.ndarray)) and all(isinstance(x, (int, np.integer)) for x in goal_state)):
+            # print('text-based goal')
+            # Define the four corners of the U-shaped maze
+            corners = [
+                [0.5, 0.5],    # Lower left corner
+                [0.5, 3.1],    # Upper left corner
+                [3.1, 3.1],    # Upper right corner
+                [3.1, 0.5]     # Lower right corner
+            ]
+            
+            # Get the target corner coordinates
+            target_pos = corners[goal_state]
+            
+            # Calculate distance to the target corner
+            success = np.linalg.norm(np.array(target_pos) - cur_state[:2]) < 0.7 # 0.6 is the width of the maze
+            state_dist = np.linalg.norm(np.array(target_pos) - cur_state[:2])
+        else:
+            # print('image-based goal')
+            # Original implementation for image-based goals
+            success = np.linalg.norm(goal_state[:2] - cur_state[:2]) < 0.5
+            state_dist = np.linalg.norm(goal_state - cur_state)
+            
         return {
             'success': success,
             'state_dist': state_dist,

@@ -128,8 +128,21 @@ class VWorldModel(nn.Module):
     def encode_obs(self, obs):
         """
         input : obs (dict): "visual", "proprio" (b, t, 3, img_size, img_size)
+                or obs (dict): "text" (list of strings)
         output:   z (dict): "visual", "proprio" (b, t, num_patches, encoder_emb_dim)
+                or z (dict): "text" (b, t, 1, encoder_emb_dim)
         """
+        # Check if this is a text-based observation
+        if "text" in obs:
+            text_list = obs["text"]
+            # Use the CLIP text encoder
+            text_embs = self.encoder.encode_text(text_list)
+            # Add time dimension if needed
+            if len(text_embs.shape) == 3:  # [b, 1, d]
+                text_embs = text_embs.unsqueeze(1)  # [b, 1, 1, d]
+            return {"text": text_embs}
+        
+        # Regular visual observation processing
         visual = obs['visual']
         b = visual.shape[0]
         visual = rearrange(visual, "b t ... -> (b t) ...")

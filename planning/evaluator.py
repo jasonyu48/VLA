@@ -27,6 +27,7 @@ class PlanEvaluator:  # evaluator for planning
         seed,
         preprocessor,
         n_plot_samples,
+        text_goal=False,
     ):
         self.obs_0 = obs_0
         self.obs_g = obs_g
@@ -38,6 +39,7 @@ class PlanEvaluator:  # evaluator for planning
         self.seed = seed
         self.preprocessor = preprocessor
         self.n_plot_samples = n_plot_samples
+        self.text_goal = text_goal
         self.device = next(wm.parameters()).device
 
         self.plot_full = False  # plot all frames or frames after frameskip
@@ -98,9 +100,10 @@ class PlanEvaluator:  # evaluator for planning
         trans_obs_0 = move_to_device(
             self.preprocessor.transform_obs(self.obs_0), self.device
         )
-        trans_obs_g = move_to_device(
-            self.preprocessor.transform_obs(self.obs_g), self.device
-        ) # -------when text goal is used, we also don't need to transform the goal--------
+        if not self.text_goal:
+            trans_obs_g = move_to_device(
+                self.preprocessor.transform_obs(self.obs_g), self.device
+            )
         with torch.no_grad():
             i_z_obses, _ = self.wm.rollout(
                 obs_0=trans_obs_0,
@@ -154,7 +157,8 @@ class PlanEvaluator:  # evaluator for planning
         Return
             logs
             successes
-        """
+        """       
+        # Evaluate state based on goal type
         eval_results = self.env.eval_state(self.state_g, e_state)
         successes = eval_results['success']
 
@@ -166,22 +170,46 @@ class PlanEvaluator:  # evaluator for planning
         print("Success rate: ", logs['success_rate'])
         print(eval_results)
 
-        visual_dists = np.linalg.norm(e_obs["visual"] - self.obs_g["visual"], axis=1)
-        mean_visual_dist = np.mean(visual_dists)
-        proprio_dists = np.linalg.norm(e_obs["proprio"] - self.obs_g["proprio"], axis=1)
-        mean_proprio_dist = np.mean(proprio_dists)
-
-        e_obs = move_to_device(self.preprocessor.transform_obs(e_obs), self.device)
-        e_z_obs = self.wm.encode_obs(e_obs)
-        div_visual_emb = torch.norm(e_z_obs["visual"] - i_z_obs["visual"]).item()
-        div_proprio_emb = torch.norm(e_z_obs["proprio"] - i_z_obs["proprio"]).item()
-
-        logs.update({
-            "mean_visual_dist": mean_visual_dist,
-            "mean_proprio_dist": mean_proprio_dist,
-            "mean_div_visual_emb": div_visual_emb,
-            "mean_div_proprio_emb": div_proprio_emb,
-        })
+        # Check if we're using text-based goals
+        text_goal = hasattr(self, 'text_goal') and self.text_goal
+        # For text-based goals, we don't have visual or proprio goal observations
+        if not text_goal:
+            visual_dists = np.linalg.norm(e_obs["visual"] - self.obs_g["visual"], axis=1)
+            mean_visual_dist = np.mean(visual_dists)
+            proprio_dists = np.linalg.norm(e_obs["proprio"] - self.obs_g["proprio"], axis=1)
+            mean_proprio_dist = np.mean(proprio_dists)
+            
+            e_obs = move_to_device(self.preprocessor.transform_obs(e_obs), self.device)
+            e_z_obs = self.wm.encode_obs(e_obs)
+            
+            # Compare embeddings
+            div_visual_emb = torch.norm(e_z_obs["visual"] - i_z_obs["visual"]).item()
+            div_proprio_emb = torch.norm(e_z_obs["proprio"] - i_z_obs["proprio"]).item()
+            
+            logs.update({
+                "mean_visual_dist": mean_visual_dist,
+                "mean_proprio_dist": mean_proprio_dist,
+                "div_visual_emb": div_visual_emb,
+                "div_proprio_emb": div_proprio_emb,
+            })
+        else:
+            # For text goals, we only compare the final state to the target corner
+            e_obs = move_to_device(self.preprocessor.transform_obs(e_obs), self.device)
+            e_z_obs = self.wm.encode_obs(e_obs)
+            
+            # Compare visual embeddings only
+            if "visual" in e_z_obs and "visual" in i_z_obs:
+                div_visual_emb = torch.norm(e_z_obs["visual"] - i_z_obs["visual"]).item()
+                logs.update({
+                    "div_visual_emb": div_visual_emb,
+                })
+            
+            # Compare proprio embeddings only
+            if "proprio" in e_z_obs and "proprio" in i_z_obs:
+                div_proprio_emb = torch.norm(e_z_obs["proprio"] - i_z_obs["proprio"]).item()
+                logs.update({
+                    "div_proprio_emb": div_proprio_emb,
+                })
 
         return logs, successes
 
@@ -190,13 +218,20 @@ class PlanEvaluator:  # evaluator for planning
     ):
         """
         i_visuals may have less frames than e_visuals due to frameskip, so pad accordingly
-        e_visuals: (b, t, h, w, c)
-        i_visuals: (b, t, h, w, c)
-        goal: (b, h, w, c)
+        e_visuals: (b, t, c, h, w)
+        i_visuals: (b, t, c, h, w)
         """
         e_visuals = e_visuals[: self.n_plot_samples]
         i_visuals = i_visuals[: self.n_plot_samples]
-        goal_visual = self.obs_g["visual"][: self.n_plot_samples]
+        #print the shape of e_visuals and i_visuals
+        print(e_visuals.shape) #[5, 26, 3, 224, 224]
+        print(i_visuals.shape) #[5, 6, 3, 224, 224]
+        print(self.obs_g) #a list of 5 strings
+        if isinstance(self.obs_g[0], str):
+            #TODO: handle text-based goals. if 'lower left' in str, create a 224x224 image where its bottom left is 1 and the rest is 0, and so on, do it for all the str in self.obs_g
+        else:
+            goal_visual = self.obs_g["visual"][: self.n_plot_samples]
+
         goal_visual = self.preprocessor.transform_obs_visual(goal_visual)
 
         i_visuals = i_visuals.unsqueeze(2)
