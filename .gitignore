@@ -3,6 +3,6 @@ __pycache__
 outputs
 plan_outputs
 my_state_plot_*.png
-goal_visualization_tests/
-maze_state_tests/
-maze_visualizations/
+goal_visualization_tests
+maze_state_tests
+maze_visualizations
