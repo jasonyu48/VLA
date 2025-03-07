@@ -2,3 +2,7 @@ __pycache__
 *.pyc
 outputs
 plan_outputs
+my_state_plot_*.png
+goal_visualization_tests/
+maze_state_tests/
+maze_visualizations/

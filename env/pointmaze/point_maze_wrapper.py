@@ -62,12 +62,12 @@ class PointMazeWrapper(MazeEnv):
         """
         if isinstance(goal_state, (int, np.integer)) or (isinstance(goal_state, (list, np.ndarray)) and all(isinstance(x, (int, np.integer)) for x in goal_state)):
             # print('text-based goal')
-            # Define the four corners of the U-shaped maze
+            # Define the four corners of the U-shaped maze!!!!
             corners = [
-                [0.5, 0.5],    # Lower left corner
-                [0.5, 3.1],    # Upper left corner
-                [3.1, 3.1],    # Upper right corner
-                [3.1, 0.5]     # Lower right corner
+                    [0.5, 3.1], # bottom-left
+                    [0.5, 0.5], # top-left
+                    [3.1, 0.5], # top-right
+                    [3.1, 3.1]  # bottom-right
             ]
             
             # Get the target corner coordinates

@@ -96,6 +96,9 @@ class CEMPlanner(BasePlanner):
                 # Compute cosine similarity
                 visual_norm = torch.nn.functional.normalize(visual_emb, p=2, dim=1)
                 text_norm = torch.nn.functional.normalize(text_emb, p=2, dim=1)
+
+                # # Compute L2 distance
+                # loss = torch.norm(visual_norm - text_norm, p=2, dim=1)
                 
                 # Compute dot product
                 similarity = torch.sum(visual_norm * text_norm, dim=1)

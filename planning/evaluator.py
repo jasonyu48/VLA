@@ -235,13 +235,13 @@ class PlanEvaluator:  # evaluator for planning
             for goal in self.obs_g['text'][: self.n_plot_samples]:
                 img = np.zeros((224, 224))
                 if 'bottom-left' in goal: # change the keyword here!!!!
-                    img[:112, :112] = 1
-                elif 'top-left' in goal:
                     img[112:, :112] = 1
+                elif 'top-left' in goal:
+                    img[:112, :112] = 1
                 elif 'top-right' in goal:
-                    img[112:, 112:] = 1
-                elif 'bottom-right' in goal:
                     img[:112, 112:] = 1
+                elif 'bottom-right' in goal:
+                    img[112:, 112:] = 1
                 goal_visual.append(torch.tensor(img).unsqueeze(0).repeat(3, 1, 1))  # Convert to 3-channel tensor
             goal_visual = torch.stack(goal_visual)  # Stack into batch format
             goal_visual = goal_visual.unsqueeze(1)  # Add a new dimension for the goal
