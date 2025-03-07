@@ -28,7 +28,7 @@ ckpt_base_path: /brtx/604-nvme1/jyu48/dino_wm_data/check_point/outputs/2025-03-0
 model_name: null
 model_epoch: latest
 
-seed: 99
+seed: 34
 n_evals: 5
 goal_source: 'text_goal' # 'random_state' or 'dset' or 'random_action' or 'text_goal'
 goal_H: 5 # specifies how far away the goal is if goal_source is 'dset'

@@ -14,7 +14,6 @@ class CLIPEncoder(nn.Module):
         # Get embedding dimension from the model's configuration
         self.emb_dim = self.model.config.projection_dim  # This is the common projection space dimension
         
-        # Since we're using pooled output, this will be 1D
         self.latent_ndim = 1
         
         # Get patch size from model config if available
@@ -26,13 +25,10 @@ class CLIPEncoder(nn.Module):
     def forward(self, x):
         """Process images through the CLIP vision encoder"""
         device = x.device
-        x = (x * 255).cpu().numpy().astype("uint8")
-        
-        x = x.transpose(0, 2, 3, 1)
-        images = [img for img in x]
+        x = ((x + 1) / 2 * 255).to(torch.uint8)
         
         # Process images
-        inputs = self.processor(images=images, return_tensors="pt")
+        inputs = self.processor(images=x, return_tensors="pt")
         inputs = {k: v.to(device) for k, v in inputs.items()}
         
         # Get features using the unified model
@@ -40,8 +36,7 @@ class CLIPEncoder(nn.Module):
             outputs = self.model.get_image_features(**inputs)
             
         # Add dummy patch dimension to match expected shape
-        if self.latent_ndim == 1:
-            outputs = outputs.unsqueeze(1)
+        outputs = outputs.unsqueeze(1)
             
         return outputs
     
@@ -65,8 +60,6 @@ class CLIPEncoder(nn.Module):
         with torch.no_grad():
             outputs = self.model.get_text_features(**inputs)
             
-        # Add dummy patch dimension to match expected shape
-        if self.latent_ndim == 1:
-            outputs = outputs.unsqueeze(1)
+        outputs = outputs.unsqueeze(1)
             
-        return outputs 
+        return outputs

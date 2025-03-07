@@ -76,45 +76,36 @@ class CEMPlanner(BasePlanner):
         """
         # Check if we're using text-based goals
         if "text" in z_obs_tgt:
-            try:
-                # For text goals, use cosine similarity between visual and text embeddings
-                # Get the last predicted visual embedding
-                visual_emb = z_obs_pred["visual"][:, -1]  # Shape: [B, 1, D]
+            # For text goals, use cosine similarity between visual and text embeddings
+            # Get the last predicted visual embedding
+            visual_emb = z_obs_pred["visual"][:, -1]  # Shape: [B, 1, D]
+            
+            # Get the text embedding
+            text_emb = z_obs_tgt["text"]  # Shape: [B, 1, 1, D]
+            
+            # Print shapes for debugging
+            # print(f"Visual embedding shape: {visual_emb.shape}")
+            # print(f"Text embedding shape: {text_emb.shape}")
+            
+            text_emb = text_emb.squeeze(1).squeeze(1)  # [B, D]
+            visual_emb = visual_emb.squeeze(1)  # [B, D]
                 
-                # Get the text embedding
-                text_emb = z_obs_tgt["text"]  # Shape: [B, 1, 1, D]
-                
-                # Print shapes for debugging
-                # print(f"Visual embedding shape: {visual_emb.shape}")
-                # print(f"Text embedding shape: {text_emb.shape}")
-                
-                text_emb = text_emb.squeeze(1).squeeze(1)  # [B, D]
-                visual_emb = visual_emb.squeeze(1)  # [B, D]
-                    
-                # print(f"Final visual shape: {visual_emb.shape}, text shape: {text_emb.shape}")
-                
-                # Compute cosine similarity
-                visual_norm = torch.nn.functional.normalize(visual_emb, p=2, dim=1)
-                text_norm = torch.nn.functional.normalize(text_emb, p=2, dim=1)
+            # print(f"Final visual shape: {visual_emb.shape}, text shape: {text_emb.shape}")
+            
+            # Compute cosine similarity
+            visual_norm = torch.nn.functional.normalize(visual_emb, p=2, dim=1)
+            text_norm = torch.nn.functional.normalize(text_emb, p=2, dim=1)
 
-                # # Compute L2 distance
-                # loss = torch.norm(visual_norm - text_norm, p=2, dim=1)
-                
-                # Compute dot product
-                similarity = torch.sum(visual_norm * text_norm, dim=1)
-                
-                # Convert similarity to distance (1 - similarity)
-                loss = 1 - similarity # torch.Size([300]) This loss is not L2 loss!!!!
-                # print(f"Loss shape: {loss.shape}, values: {loss[:5]}")  # Print first 5 values
-                return loss
-                
-            except Exception as e:
-                print(f"Error in computing text-based loss: {e}")
-                print("Falling back to random ranking")
-                
-                # Fallback: return random values as loss
-                batch_size = z_obs_pred["visual"].shape[0]
-                return torch.rand(batch_size, device=z_obs_pred["visual"].device)
+            # # Compute L2 distance
+            # loss = torch.norm(visual_norm - text_norm, p=2, dim=1)
+            
+            # Compute dot product
+            similarity = torch.sum(visual_norm * text_norm, dim=1)
+            
+            # Convert similarity to distance (1 - similarity)
+            loss = 1 - similarity # torch.Size([300]) This loss is not L2 loss!!!!
+            # print(f"Loss shape: {loss.shape}, values: {loss[:5]}")  # Print first 5 values
+            return loss
         else:
             # Use the original objective function for visual goals
             return self.objective_fn(z_obs_pred, z_obs_tgt)
