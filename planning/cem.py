@@ -79,10 +79,10 @@ class CEMPlanner(BasePlanner):
             try:
                 # For text goals, use cosine similarity between visual and text embeddings
                 # Get the last predicted visual embedding
-                visual_emb = z_obs_pred["visual"][:, -1]  # Shape: [B, 1, D]!!!!
+                visual_emb = z_obs_pred["visual"][:, -1]  # Shape: [B, 1, D]
                 
                 # Get the text embedding
-                text_emb = z_obs_tgt["text"]  # Shape: [B, 1, 1, D]!!!!
+                text_emb = z_obs_tgt["text"]  # Shape: [B, 1, 1, D]
                 
                 # Print shapes for debugging
                 # print(f"Visual embedding shape: {visual_emb.shape}")
@@ -101,7 +101,7 @@ class CEMPlanner(BasePlanner):
                 similarity = torch.sum(visual_norm * text_norm, dim=1)
                 
                 # Convert similarity to distance (1 - similarity)
-                loss = 1 - similarity # torch.Size([300])!!!!!
+                loss = 1 - similarity # torch.Size([300]) This loss is not L2 loss!!!!
                 # print(f"Loss shape: {loss.shape}, values: {loss[:5]}")  # Print first 5 values
                 return loss
                 

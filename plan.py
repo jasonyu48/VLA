@@ -225,11 +225,11 @@ class PlanWorkspace:
             # Handle text-based goals
             if self.goal_source == "text_goal":
                 # Define the four corner descriptions
-                corner_descriptions = [
-                    "a green point is at the lower left corner of the u-shaped maze",
-                    "a green point is at the upper left corner of the u-shaped maze",
-                    "a green point is at the upper right corner of the u-shaped maze",
-                    "a green point is at the lower right corner of the u-shaped maze"
+                corner_descriptions = [ #change prompt here!!!!
+                    "A small green dot is at the bottom-left corner of a U-shaped maze with a thick orange border on a blue checkered background.",
+                    "A small green dot is at the top-left corner of a U-shaped maze with a thick orange border on a blue checkered background.",
+                    "A small green dot is at the top-right corner of a U-shaped maze with a thick orange border on a blue checkered background.",
+                    "A small green dot is at the bottom-right corner of a U-shaped maze with a thick orange border on a blue checkered background."
                 ]
                 
                 # Randomly assign corner goals to each evaluation instance
