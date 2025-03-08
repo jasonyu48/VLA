@@ -1,7 +1,7 @@
 defaults:
   - _self_
   - env: point_maze
-  - encoder: clip 
+  - encoder: siglip 
   - action_encoder: proprio
   - proprio_encoder: proprio
   - decoder: vqvae_clip
@@ -33,7 +33,7 @@ training:
   seed: 0
   epochs: 32
   batch_size: 128 # should >= nodes * tasks_per_node  
-  # accelerate launch train.py --config-name train.yaml env=point_maze frameskip=5 num_hist=3
+  # accelerate launch train.py --config-name train.yaml
   save_every_x_epoch: 1
   reconstruct_every_x_batch: 500
   num_reconstruct_samples: 6

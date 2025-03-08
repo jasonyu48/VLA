@@ -1,3 +1,5 @@
 _target_: models.siglip.SigLIPEncoder
-name: "google/siglip-base-patch16-224"
-feature_key: "pooler_output" 
+name: "google/siglip-so400m-patch14-224"
+feature_key: "pooler_output"
+# "google/siglip-base-patch16-224"
+# "google/siglip-so400m-patch14-224"

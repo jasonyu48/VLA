@@ -23,8 +23,8 @@ hydra:
             "export MASTER_PORT=$(for port in $(shuf -i 30000-65500 -n 20); do if [[ $(netstat -tupln 2>&1 | grep $port | wc -l) -eq 0 ]] ; then echo $port; break; fi; done;)",]
 
 # model to load for planning
-ckpt_base_path: /brtx/604-nvme1/jyu48/dino_wm_data/check_point/outputs/2025-03-06 # put absolute path here. Checkpoints will be loaded from ${ckpt_base_path}
-# python plan.py model_name=18-41-43 planner.opt_steps=30
+ckpt_base_path: /brtx/604-nvme1/jyu48/dino_wm_data/check_point/outputs/2025-03-07 # put absolute path here. Checkpoints will be loaded from ${ckpt_base_path}
+# python plan.py model_name=17-00-40 planner.opt_steps=30
 model_name: null
 model_epoch: latest
 
