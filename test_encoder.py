@@ -128,10 +128,10 @@ def main():
     ]
     
     text_descriptions = [
-        "A green dot is at the bottom-left of a U-shaped maze with a thick orange border on a blue checkered background.",
-        "A green dot is at the top-left of a U-shaped maze with a thick orange border on a blue checkered background.",
-        "A green dot is at the top-right of a U-shaped maze with a thick orange border on a blue checkered background.",
-        "A green dot is at the bottom-right of a U-shaped maze with a thick orange border on a blue checkered background."
+        "A green dot is at the bottom-left of a U-shaped maze with a thick orange border on a blue checkered background. A red dot is at the top-left, outside the maze.",
+        "A green dot is at the top-left of a U-shaped maze with a thick orange border on a blue checkered background. A red dot is at the top-left, outside the maze.",
+        "A green dot is at the top-right of a U-shaped maze with a thick orange border on a blue checkered background. A red dot is at the top-left, outside the maze.",
+        "A green dot is at the bottom-right of a U-shaped maze with a thick orange border on a blue checkered background. A red dot is at the top-left, outside the maze."
     ]
     
     # Load model and processor
