@@ -30,10 +30,10 @@ model_epoch: latest
 
 seed: 34
 n_evals: 5
-goal_source: 'random_state' # 'random_state' or 'dset' or 'random_action' or 'text_goal'
+goal_source: 'text_goal' # 'random_state' or 'dset' or 'random_action' or 'text_goal'
 goal_H: 5 # specifies how far away the goal is if goal_source is 'dset'
 n_plot_samples: 10
-text_goal: False # set to true to use text-based goals (only works with goal_source='text_goal')
+text_goal: True # set to true to use text-based goals (only works with goal_source='text_goal')
 
 debug_dset_init: False
 

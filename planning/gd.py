@@ -148,6 +148,8 @@ class GDPlanner(BasePlanner):
             # if i%100 == 0:
             #     all_losses.append(loss.detach().cpu().numpy())
             total_loss = loss.mean() * n_evals  # loss for each eval is independent
+            if i % self.eval_every == 0:
+                print(f"loss: {total_loss.item()}")
             total_loss.backward()
             with torch.no_grad():
                 actions_new = actions - optimizer.param_groups[0]["lr"] * actions.grad
