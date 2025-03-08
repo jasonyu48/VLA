@@ -68,9 +68,48 @@ class GDPlanner(BasePlanner):
     def get_action_optimizer(self, actions):
         return torch.optim.SGD([actions], lr=self.lr)
 
+    def _compute_loss(self, z_obs_pred, z_obs_tgt):
+        """
+        Custom loss function that can handle both visual and text-based goals
+        
+        Args:
+            z_obs_pred: Predicted observations in latent space
+            z_obs_tgt: Target observations in latent space
+            
+        Returns:
+            loss: Loss tensor of shape (B,)
+        """
+        # Check if we're using text-based goals
+        if "text" in z_obs_tgt:
+            # For text goals, use cosine similarity between visual and text embeddings
+            # Get the last predicted visual embedding
+            visual_emb = z_obs_pred["visual"][:, -1]  # Shape: [B, 1, D]
+            
+            # Get the text embedding
+            text_emb = z_obs_tgt["text"]  # Shape: [B, 1, 1, D]
+            
+            text_emb = text_emb.squeeze(1).squeeze(1)  # [B, D]
+            visual_emb = visual_emb.squeeze(1)  # [B, D]
+                
+            # Compute cosine similarity
+            visual_norm = torch.nn.functional.normalize(visual_emb, p=2, dim=1)
+            text_norm = torch.nn.functional.normalize(text_emb, p=2, dim=1)
+            
+            # Compute dot product
+            similarity = torch.sum(visual_norm * text_norm, dim=1)
+            
+            # Convert similarity to distance (1 - similarity)
+            loss = 1 - similarity
+            return loss
+        else:
+            # Use the original objective function for visual goals
+            return self.objective_fn(z_obs_pred, z_obs_tgt)
+
     def plan(self, obs_0, obs_g, actions=None):
         """
         Args:
+            obs_0: Initial observations
+            obs_g: Goal observations (can be visual or text)
             actions: normalized
         Returns:
             actions: (B, T, action_dim) torch.Tensor
@@ -78,9 +117,17 @@ class GDPlanner(BasePlanner):
         trans_obs_0 = move_to_device(
             self.preprocessor.transform_obs(obs_0), self.device
         )
-        trans_obs_g = move_to_device(
-            self.preprocessor.transform_obs(obs_g), self.device
-        )
+        
+        # Handle text-based goals differently
+        if "text" in obs_g:
+            # Text goals don't need transformation
+            trans_obs_g = {"text": obs_g["text"]}
+        else:
+            # Transform visual goals
+            trans_obs_g = move_to_device(
+                self.preprocessor.transform_obs(obs_g), self.device
+            )
+            
         z_obs_g = self.wm.encode_obs(trans_obs_g)
         z_obs_g_detached = {key: value.detach() for key, value in z_obs_g.items()}
 
@@ -89,13 +136,17 @@ class GDPlanner(BasePlanner):
         optimizer = self.get_action_optimizer(actions)
         n_evals = actions.shape[0]
 
+        # all_losses = []
         for i in range(self.opt_steps):
             optimizer.zero_grad()
             i_z_obses, i_zs = self.wm.rollout(
                 obs_0=trans_obs_0,
                 act=actions,
             )
-            loss = self.objective_fn(i_z_obses, z_obs_g_detached)  # (n_evals, )
+            # Use the custom loss function instead of directly using objective_fn
+            loss = self._compute_loss(i_z_obses, z_obs_g_detached)  # (n_evals, )
+            # if i%100 == 0:
+            #     all_losses.append(loss.detach().cpu().numpy())
             total_loss = loss.mean() * n_evals  # loss for each eval is independent
             total_loss.backward()
             with torch.no_grad():
@@ -118,4 +169,5 @@ class GDPlanner(BasePlanner):
                 self.dump_logs(logs)
                 if np.all(successes):
                     break  # terminate planning if all success
+        # print(f"all_losses: {all_losses}")
         return actions, np.full(n_evals, np.inf)  # all actions are valid

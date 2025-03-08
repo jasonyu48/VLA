@@ -169,7 +169,7 @@ class PlanEvaluator:  # evaluator for planning
         }
 
         print("Success rate: ", logs['success_rate'])
-        print(eval_results)
+        print(eval_results) # print the eval results !!!!
 
         # Check if we're using text-based goals
         text_goal = hasattr(self, 'text_goal') and self.text_goal
