@@ -24,7 +24,7 @@ hydra:
 
 # model to load for planning
 ckpt_base_path: /brtx/604-nvme1/jyu48/dino_wm_data/check_point/outputs/2025-03-07 # put absolute path here. Checkpoints will be loaded from ${ckpt_base_path}
-# python plan.py model_name=17-00-40 planner.opt_steps=30
+# python plan.py model_name=17-00-40
 model_name: null
 model_epoch: latest
 
